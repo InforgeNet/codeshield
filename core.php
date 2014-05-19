@@ -70,8 +70,17 @@ if ($_COOKIE['notabot']) {
 //This function controls if Server Load is > of max value
 function header_check()
 {
+    if ($method == 2)
+    {
     $load = explode(" ",@file_get_contents('/proc/loadavg'));
     $loadint = intval($load[0]);
+    }
+    else
+    {
+    $str = substr(strrchr(shell_exec("uptime"),":"),1);
+    $avs = array_map("trim",explode(",",$str));
+    $loadint = intval($avs[0]);
+    }
 
     if ($loadint >= $maxserverload)
 	  

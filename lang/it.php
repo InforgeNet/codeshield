@@ -1,5 +1,5 @@
 <div style="margin:auto;max-width:600px;font-family:'Arial',sans-serif;font-size:13px;margin-top:3em;line-height:160%">
-<p style="text-align: right;"><img alt="" src="../images/logo.jpg" style="height:83px; width:235px" /></p>
+<p style="text-align: right;"><img alt="" src="codeshield/images/logo.jpg" style="height:83px; width:235px" /></p>
 
 <p>E&#39; attivo il controllo <strong>antibot</strong>.</p>
 

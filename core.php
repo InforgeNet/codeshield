@@ -118,7 +118,7 @@ function make_goddamn_cookie()
     $datemoltiplier = intval($quarterdate)*intval(date(G));
     //Create Salt Cookie to prevent Cookied Proxies @ Fight the Lamah!
     global $saltcookie;
-    $saltcookie = "antibot_".md5($salt.$datemoltiplier.$honeypotapi);
+    $saltcookie = "antibot_".md5($salt.$datemoltiplier.$honeypotapi.$_SERVER['REMOTE_ADDR']);
     
 }
 

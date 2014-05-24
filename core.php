@@ -62,63 +62,9 @@ require_once("config.php");
 //Cookie Switcher
 function make_goddamn_cookie()
 {
-    $datecheck = intval(date("i"));
-    //Ok not very elegant but it works!
-    if ($datecheck >= 0 and $datecheck <= 4)
-    {
-        $quarterdate = 1;
-    }
-    elseif ($datecheck >= 5 and $datecheck <= 9)
-    {
-        $quarterdate = 2;
-    }
-    elseif ($datecheck >= 10 and $datecheck <= 14)
-    {
-        $quarterdate = 3;
-    }
-    elseif ($datecheck >= 15 and $datecheck <= 19)
-    {
-        $quarterdate = 4;
-    }
-    elseif ($datecheck >= 20 and $datecheck <= 24)
-    {
-        $quarterdate = 5;
-    }
-    elseif ($datecheck >= 25 and $datecheck <= 29)
-    {
-        $quarterdate = 6;
-    }
-    elseif ($datecheck >= 30 and $datecheck <= 34)
-    {
-        $quarterdate = 7;
-    }
-    elseif ($datecheck >= 35 and $datecheck <= 39)
-    {
-        $quarterdate = 8;
-    }
-    elseif ($datecheck >= 40 and $datecheck <= 44)
-    {
-        $quarterdate = 9;
-    }
-    elseif ($datecheck >= 45 and $datecheck <= 49)
-    {
-        $quarterdate = 10;
-    }
-    
-    elseif ($datecheck >= 50 and $datecheck <= 54)
-    {
-        $quarterdate = 11;
-    }
-    
-    elseif ($datecheck >= 55 and $datecheck <= 59)
-    {
-        $quarterdate = 12;
-    }
-    //Create Moltiplier Hash - Generating 266 combinations!!!
-    $datemoltiplier = intval($quarterdate)*intval(date(G));
     //Create Salt Cookie to prevent Cookied Proxies @ Fight the Lamah!
     global $saltcookie;
-    $saltcookie = "antibot_".md5($salt.$datemoltiplier.$honeypotapi.$_SERVER['REMOTE_ADDR']);
+    $saltcookie = "antibot_".md5($salt.date(G).$honeypotapi.$_SERVER['REMOTE_ADDR']);
     
 }
 

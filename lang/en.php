@@ -5,6 +5,6 @@
 
 <p>To avoid being attacked, server wants to know if your navigation is legitimate.</p>
 
-<p>If you&#39;re not a bot please <a href="javascript:letmein()">click here for continue</a>, you will be redirected to the page you&#39;re visiting.<br />
+<p>If you&#39;re not a bot please <a href="javascript:letmein('<?=$saltcookie;?>')">click here for continue</a>, you will be redirected to the page you&#39;re visiting.<br />
 In case of problems, make sure you have cookies active on your browser!</p>
 </div>

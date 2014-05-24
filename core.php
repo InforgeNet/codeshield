@@ -58,41 +58,100 @@ DON'T EDIT THIS FILE UNLESS YOU KNOW WHAT YOU'RE DOING
 //Include Config.php
 require_once("config.php");
 
-if ($_COOKIE['notabot']) {
+
+//Cookie Switcher
+function make_goddamn_cookie()
+{
+    $datecheck = intval(date("i"));
+    //Ok not very elegant but it works!
+    if ($datecheck >= 0 and $datecheck <= 4)
+    {
+        $quarterdate = 1;
+    }
+    elseif ($datecheck >= 5 and $datecheck <= 9)
+    {
+        $quarterdate = 2;
+    }
+    elseif ($datecheck >= 10 and $datecheck <= 14)
+    {
+        $quarterdate = 3;
+    }
+    elseif ($datecheck >= 15 and $datecheck <= 19)
+    {
+        $quarterdate = 4;
+    }
+    elseif ($datecheck >= 20 and $datecheck <= 24)
+    {
+        $quarterdate = 5;
+    }
+    elseif ($datecheck >= 25 and $datecheck <= 29)
+    {
+        $quarterdate = 6;
+    }
+    elseif ($datecheck >= 30 and $datecheck <= 34)
+    {
+        $quarterdate = 7;
+    }
+    elseif ($datecheck >= 35 and $datecheck <= 39)
+    {
+        $quarterdate = 8;
+    }
+    elseif ($datecheck >= 40 and $datecheck <= 44)
+    {
+        $quarterdate = 9;
+    }
+    elseif ($datecheck >= 45 and $datecheck <= 49)
+    {
+        $quarterdate = 10;
+    }
+    
+    elseif ($datecheck >= 50 and $datecheck <= 54)
+    {
+        $quarterdate = 11;
+    }
+    
+    elseif ($datecheck >= 55 and $datecheck <= 59)
+    {
+        $quarterdate = 12;
+    }
+    //Create Moltiplier Hash - Generating 266 combinations!!!
+    $datemoltiplier = intval($quarterdate)*intval(date(G));
+    //Create Salt Cookie to prevent Cookied Proxies @ Fight the Lamah!
+    global $saltcookie;
+    $saltcookie = "antibot_".md5($salt.$datemoltiplier.$honeypotapi);
+    
+}
+
+
+make_goddamn_cookie();
+
+
+if ($_COOKIE[$saltcookie]) {
     //Don't check the client, it's ok!
 	ozh_httpbl_logme(false,	$_SERVER['REMOTE_ADDR']);
 } else {
     //Start Check
-    header_check();
-	ozh_httpbl_check();
+    header_check($saltcookie);
+	ozh_httpbl_check($saltcookie);
 }
 
 //This function controls if Server Load is > of max value
-function header_check()
+function header_check($saltcookie)
 {
-    if ($method == 2)
-    {
     $load = explode(" ",@file_get_contents('/proc/loadavg'));
     $loadint = intval($load[0]);
-    }
-    else
-    {
-    $str = substr(strrchr(shell_exec("uptime"),":"),1);
-    $avs = array_map("trim",explode(",",$str));
-    $loadint = intval($avs[0]);
-    }
 
     if ($loadint >= $maxserverload)
 	  
         {
             ozh_httpbl_logme($block,$ip,$type,$threat,$activity);
-			ozh_httpbl_blockme();
+			ozh_httpbl_blockme($saltcookie);
 			die();  
         }  
 }
 
 //Honeypot Project Function
-function ozh_httpbl_check() {	
+function ozh_httpbl_check($saltcookie) {	
     
     if ($honeypot == 1 )
     {
@@ -134,11 +193,11 @@ function ozh_httpbl_check() {
         //Final Honeypot Project Check
 		if ($block) {
 			ozh_httpbl_logme($block,$ip,$type,$threat,$activity);
-			ozh_httpbl_blockme();
+			ozh_httpbl_blockme($saltcookie);
 			die();
 		}
         
-        setcookie("notabot",true);
+        setcookie($saltcookie,true);
 	}
     
     }
@@ -164,10 +223,11 @@ function ozh_httpbl_logme($block = false, $ip='', $type='',$threat='',$activity=
 }
 
 
-function ozh_httpbl_blockme() {
+function ozh_httpbl_blockme($saltcookie) {
 	header('HTTP/1.0 503 Service Unavailable');
-	echo <<<HTML
-	<script type="text/javascript">
+
+	echo "
+    <script type='text/javascript'>
 	function setcookie( name, value, expires, path, domain, secure ) {
 		// set time, it's in milliseconds
 		var today = new Date();
@@ -178,20 +238,21 @@ function ozh_httpbl_blockme() {
 		}
 		var expires_date = new Date( today.getTime() + (expires) );
 	
-		document.cookie = name + "=" +escape( value ) +
-		( ( expires ) ? ";expires=" + expires_date.toGMTString() : "" ) + 
-		( ( path ) ? ";path=" + path : "" ) + 
-		( ( domain ) ? ";domain=" + domain : "" ) +
-		( ( secure ) ? ";secure" : "" );
+		document.cookie = name + \"=\" +escape( value ) +
+		( ( expires ) ? \";expires=\" + expires_date.toGMTString() : \"\" ) + 
+		( ( path ) ? \";path=\" + path : \"\" ) + 
+		( ( domain ) ? \";domain=\" + domain : \"\" ) +
+		( ( secure ) ? \";secure\" : \"\" );
 	}	
-	function letmein() {
-		setcookie('notabot','true',1,'/', '', '');
+	function letmein(cookie) {
+		setcookie(cookie,'true',1,'/', '', '');
 		location.reload(true);
 	}
-    letmein();
+    /*document.write('$saltcookie');*/
+    letmein('$saltcookie');
 	</script>
 
-HTML;
+";
 
 $lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
 switch ($lang)

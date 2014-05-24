@@ -6,7 +6,7 @@
 <p>Per evitare di subire attacchi e slowdown dei server, hai bisogno di confermare<br />
 la tua navigazione nel portale.</p>
 
-<p>Se ci assicuri che non sei un bot <a href="javascript:letmein()">clicca qui per continuare</a>, verrai reindirizzato alla pagina<br />
+<p>Se ci assicuri che non sei un bot <a href="javascript:letmein('<?=$saltcookie;?>')">clicca qui per continuare</a>, verrai reindirizzato alla pagina<br />
 che stavi visitando.<br />
 In caso di problemi, assicurati di avere i cookie attivi sul tuo browser!</p>
 </div>

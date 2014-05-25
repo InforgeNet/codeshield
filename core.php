@@ -1,7 +1,7 @@
 <?php
 /*
     codeshield - A simple but great solution against Denial of Service HTTP
-    Copyright (C) 2014  Stefano Novelli
+    Copyright (C) 2014  Inforge.net
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -54,164 +54,167 @@ DON'T EDIT THIS FILE UNLESS YOU KNOW WHAT YOU'RE DOING
 DON'T EDIT THIS FILE UNLESS YOU KNOW WHAT YOU'RE DOING
 
 */
-
-//Include Config.php
-require_once("config.php");
-
-
-//Cookie Switcher
-function make_goddamn_cookie()
-{
-    //Create Salt Cookie to prevent Cookied Proxies @ Fight the Lamah!
-    global $saltcookie;
-    $saltcookie = "antibot_".md5($salt.date(G).$honeypotapi.$_SERVER['REMOTE_ADDR']);
-    
-}
-
-
-make_goddamn_cookie();
-
-
-if ($_COOKIE[$saltcookie]) {
-    //Don't check the client, it's ok!
-	ozh_httpbl_logme(false,	$_SERVER['REMOTE_ADDR']);
-} else {
-    //Start Check
-    header_check($saltcookie);
-	ozh_httpbl_check($saltcookie);
-}
-
-//This function controls if Server Load is > of max value
-function header_check($saltcookie)
-{
-    $load = explode(" ",@file_get_contents('/proc/loadavg'));
-    $loadint = intval($load[0]);
-
-    if ($loadint >= $maxserverload)
-	  
-        {
-            ozh_httpbl_logme($block,$ip,$type,$threat,$activity);
-			ozh_httpbl_blockme($saltcookie);
-			die();  
-        }  
-}
-
-//Honeypot Project Function
-function ozh_httpbl_check($saltcookie) {	
-    
-    if ($honeypot == 1 )
-    {
-    
-	// your http:BL key 
-	$apikey = $honeypotapi;
-	
-	// IP to test
-	$ip = $_SERVER['REMOTE_ADDR'];
-	
-	// build the lookup DNS query
-	// Example : for '127.9.1.2' you should query 'abcdefghijkl.2.1.9.127.dnsbl.httpbl.org'
-	$lookup = $apikey . '.' . implode('.', array_reverse(explode ('.', $ip ))) . '.dnsbl.httpbl.org';
-	
-	// check query response
-	$result = explode( '.', gethostbyname($lookup));
-	
-	if ($result[0] == 127) {
-		// query successful !
-		$activity = $result[1];
-		$threat = $result[2];
-		$type = $result[3];
-		
-		if ($type & 0) $typemeaning .= 'Search Engine, ';
-		if ($type & 1) $typemeaning .= 'Suspicious, ';
-		if ($type & 2) $typemeaning .= 'Harvester, ';
-		if ($type & 4) $typemeaning .= 'Comment Spammer, ';
-		$typemeaning = trim($typemeaning,', ');
-		
-		// Now determine some blocking policy
-		if (
-		($type >= 4 && $threat > 0) // Comment spammer with any threat level
-			||
-		($type < 4 && $threat > 20) // Other types, with threat level greater than 20
-		) {
-			$block = true;
-		}
-		
-        //Final Honeypot Project Check
-		if ($block) {
-			ozh_httpbl_logme($block,$ip,$type,$threat,$activity);
-			ozh_httpbl_blockme($saltcookie);
-			die();
-		}
-        
-        setcookie($saltcookie,true);
-	}
-    
+ 
+class codeshield{
+ 
+    private $salt = '<your salt>'; // Salt encryption. WARNING: Use special characters and change default value
+    public $honeypot = false; // 1 / true = Use honeypot - 0 / false = Don't use honeypot
+    public $honeypotapi = ''; // http://www.projecthoneypot.org/httpbl_configure.php
+    public $maxserverload = 6; // 0 = all filter connections - > 0 = max server load
+    public $threatmax = 20; // http://www.projecthoneypot.org/threat_info.php
+    public $typehold = 2; // Up to that type allow
+ 
+    /* WARNING: DON'T TOUCH */
+    private $ip = ''; // ip client
+    private $cookie_name = ''; // cookie name
+    private $searchenginemap = array( // Search engine map
+        0   => 'Uncodumented',
+        1   => 'AltaVista',
+        2   => 'Ask',
+        3   => 'Baidu',
+        4   => 'Excite',
+        5   => 'Google',
+        6   => 'Looksmart',
+        7   => 'Lycos',
+        8   => 'MSN',
+        9   => 'Yahoo',
+        10  => 'Cuil',
+        11  => 'InfoSeek',
+        12  => 'Miscellaneous');
+ 
+    /***************/
+    public function __construct(){
+ 
+        $this->ip = $_SERVER['REMOTE_ADDR'];
+        $this->cookie_name = 'antibot_'.md5($salt.date('G').$this->honeypotapi.$this->ip); // Ex: antibot_a60c3cf32b4c5adc4da680fc25d85113
+ 
+        if(!isset($_COOKIE[$this->cookie_name])){
+ 
+            setcookie($this->cookie_name, true);
+ 
+            $this->check_server_load();
+ 
+            if($this->honeypot) // honeypot is enabled?
+                $this->check_honeypot();
+ 
+        }
+ 
     }
-}
-
-
-function ozh_httpbl_logme($block = false, $ip='', $type='',$threat='',$activity='') {
-	$log = fopen('logs/block.log','a');
-	$stamp = date('Y-m-d :: H-i-s');
-	
-	// Some stuff you could log for further analysis
-	$page = $_SERVER['REQUEST_URI'];
-	$ua = $_SERVER["HTTP_USER_AGENT"];
-		
-	if ($block) {
-		fputs($log,"$stamp :: BLOCKED $ip :: $type :: $threat :: $activity :: $page :: $ua\n");
-	/*} else {
-		fputs($log,"$stamp :: UNBLCKD $ip :: $page :: $ua\n");
-        I don't want else to log unblockeds'
-        */
-	}
-	fclose($log);
-}
-
-
-function ozh_httpbl_blockme($saltcookie) {
-	header('HTTP/1.0 503 Service Unavailable');
-
-	echo "
-    <script type='text/javascript'>
-	function setcookie( name, value, expires, path, domain, secure ) {
-		// set time, it's in milliseconds
-		var today = new Date();
-		today.setTime( today.getTime() );
-	
-		if ( expires ) {
-			expires = expires * 1000 * 60 * 60 * 24;
-		}
-		var expires_date = new Date( today.getTime() + (expires) );
-	
-		document.cookie = name + \"=\" +escape( value ) +
-		( ( expires ) ? \";expires=\" + expires_date.toGMTString() : \"\" ) + 
-		( ( path ) ? \";path=\" + path : \"\" ) + 
-		( ( domain ) ? \";domain=\" + domain : \"\" ) +
-		( ( secure ) ? \";secure\" : \"\" );
-	}	
-	function letmein(cookie) {
-		setcookie(cookie,'true',1,'/', '', '');
-		location.reload(true);
-	}
-    /*document.write('$saltcookie');*/
-    letmein('$saltcookie');
-	</script>
-
-";
-
-$lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
-switch ($lang)
-    {
-        case "it":
-            //echo "PAGE IT";
-            require_once("lang/it.php");
-            break;      
-        default:
-            //echo "PAGE EN - Setting Default";
-            include("lang/en.php");//include EN in all other cases of different lang detection
-            break;
+ 
+    private function get_server_load(){
+ 
+        $load = 0;
+        $php_os = strtolower(PHP_OS);
+ 
+      if(strpos($php_os, 'win') === false) $load = sys_getloadavg()[0]; /* linux */ else{
+ 
+            $wmi = new COM("Winmgmts://");
+            $query = $wmi->execquery("SELECT LoadPercentage FROM Win32_Processor");
+ 
+            $cpu_num = 0;
+            $load_total = 0;
+ 
+            foreach($query as $cpu){
+ 
+                $cpu_num++;
+                $load_total += $cpu->loadpercentage;
+ 
+            }
+ 
+            $load = $load_total / $cpu_num;
+ 
+        }
+ 
+        return intval($load);
+ 
     }
+ 
+    private function check_server_load(){
+ 
+        $load_server = $this->get_server_load();
+ 
+        if($load_server >= $this->maxserverload){
+ 
+            $this->log('Server overload', $load_server, 'null');
+            $this->stamp();
+ 
+        }
+ 
+    }
+ 
+    private function check_honeypot(){
+ 
+        $reverse_ip = implode('.', array_reverse(explode('.', $this->ip)));
+        $httpbl = $this->honeypotapi.'.'.$reverse_ip.'.dnsbl.httpbl.org';
+        $gethostbyname = gethostbyname($httpbl);
+        $result = explode('.', $gethostbyname);
+ 
+        if(!empty($result) && $gethostbyname != $httpbl && $result[0] == 127){
+ 
+            $activity = $result[1];
+            $threat = $result[2];
+            $cthreat = $result[2];
+            $type = $result[3];
+            $typemeaning = array('No Malicious');
+ 
+            if($type & 0){
+ 
+                $threat = 0;
+                $activity = 'null';
+                $searchenginename = array_key_exists($cthreat, $this->searchenginemap) ? $this->searchenginemap[$cthreat] : 'Unknown';
+                $typemeaning[] = 'Search Engine - '.$searchenginename;
+ 
+            }else{
+ 
+                if($type & 1) $typemeaning[] = 'Suspicious';
+                if($type & 2) $typemeaning[] = 'Harvester';
+                if($type & 3) $typemeaning[] = 'Comment Spammer';
+ 
+            }
+ 
+            $typemeaning = trim(implode(', ', $typemeaning), ', ');
+ 
+            if($threat >= $this->threatmax && $type >= $this->typehold){
+ 
+                $this->log($typemeaning, $threat, $activity);
+                $this->stamp();
+ 
+            }
+ 
+        }
+ 
+    }
+ 
+    private function stamp(){
+ 
+        header('HTTP/1.0 503 Service Unavailable');
+ 
+        /* redirection between 2 seconds */
+        echo "<script type='text/javascript'>setTimeout(function(){window.location = window.location.href}, 2000);</script>Check if you are a bot...";
+ 
+        exit;
+ 
+    }
+ 
+    private function log($type = '?', $threat = '?', $activity = '?'){
+ 
+        $now = date('d-m-Y H-i-s');
+        $status = "BLOCKED"; // for future implementation
+        $request_uri = $_SERVER['REQUEST_URI'];
+        $user_agent = $_SERVER['HTTP_USER_AGENT'];
+ 
+        file_put_contents('block.log', $now." :: ".$status." ".$this->ip." :: ".$type." :: ".$threat." :: ".$activity." :: ".$request_uri." :: ".$user_agent."\n", FILE_APPEND);
+ 
+    }
+ 
 }
+ 
 
+ 
+############################################# Include file in the config file or in all files
+include "config.php";
+ 
+############################################# Call this in index or in all files
+$codeshield = new codeshield();
+ 
 ?>

@@ -32,3 +32,4 @@ It will show our little banner like this:<br />
 - Integration with public CMS (vBulletin, phpBB, Joomla, Drupal etc...)
 - Add more languages
 - Create an Admin Panel
+

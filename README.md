@@ -1,6 +1,6 @@
 <img src="http://www.inforge.net/community/attachments/dos-and-ddos-download/8471d1400580127-codeshield-anti-http-ddos-logo.png"> <br />
 Project name: codeshield<br />
-Version: 0.2<br />
+Version: 0.3<br />
 Provider: Inforge.net<br />
 Description: A simple but great solution against Denial of Service HTTP and Spambots<br />
 Programming Language: PHP5, Javascript<br />

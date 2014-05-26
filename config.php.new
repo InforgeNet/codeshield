@@ -1,7 +1,0 @@
-<?php
-$codeshield->$honeypot = false; // 1 / true = Use honeypot - 0 / false = Don't use honeypot
-$codeshield->honeypotapi = ''; // http://www.projecthoneypot.org/httpbl_configure.php
-$codeshield->maxserverload = 6; // 0 = all filter connections - > 0 = max server load
-$codeshield->threatmax = 20; // http://www.projecthoneypot.org/threat_info.php
-$codeshield->typehold = 2; // Up to that type allow
-?>
